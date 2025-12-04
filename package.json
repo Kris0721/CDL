@@ -1,0 +1,29 @@
+{
+    "name": "defi-lending-platform",
+    "version": "1.0.0",
+    "description": "Decentralized lending platform with cloud backend",
+    "private": true,
+    "workspaces": [
+        "frontend",
+        "blockchain"
+    ],
+    "scripts": {
+        "install:all": "npm install && cd frontend && npm install && cd ../blockchain && npm install",
+        "dev:frontend": "cd frontend && npm run dev",
+        "dev:blockchain": "cd blockchain && npx hardhat node",
+        "test": "npm run test:frontend && npm run test:blockchain",
+        "test:frontend": "cd frontend && npm test",
+        "test:blockchain": "cd blockchain && npx hardhat test",
+        "deploy:contracts": "cd blockchain && npm run deploy",
+        "build:frontend": "cd frontend && npm run build"
+    },
+    "keywords": [
+        "defi",
+        "lending",
+        "blockchain",
+        "ethereum",
+        "aws"
+    ],
+    "author": "",
+    "license": "MIT"
+}

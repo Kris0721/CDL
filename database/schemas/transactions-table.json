@@ -1,0 +1,49 @@
+{
+    "TableName": "Transactions",
+    "KeySchema": [
+        {
+            "AttributeName": "transactionId",
+            "KeyType": "HASH"
+        }
+    ],
+    "AttributeDefinitions": [
+        {
+            "AttributeName": "transactionId",
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "userId",
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "timestamp",
+            "AttributeType": "N"
+        }
+    ],
+    "GlobalSecondaryIndexes": [
+        {
+            "IndexName": "UserTransactionsIndex",
+            "KeySchema": [
+                {
+                    "AttributeName": "userId",
+                    "KeyType": "HASH"
+                },
+                {
+                    "AttributeName": "timestamp",
+                    "KeyType": "RANGE"
+                }
+            ],
+            "Projection": {
+                "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+                "ReadCapacityUnits": 5,
+                "WriteCapacityUnits": 5
+            }
+        }
+    ],
+    "ProvisionedThroughput": {
+        "ReadCapacityUnits": 5,
+        "WriteCapacityUnits": 5
+    }
+}

@@ -1,0 +1,61 @@
+{
+    "TableName": "Loans",
+    "KeySchema": [
+        {
+            "AttributeName": "loanId",
+            "KeyType": "HASH"
+        }
+    ],
+    "AttributeDefinitions": [
+        {
+            "AttributeName": "loanId",
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "borrowerId",
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "status",
+            "AttributeType": "S"
+        }
+    ],
+    "GlobalSecondaryIndexes": [
+        {
+            "IndexName": "BorrowerIndex",
+            "KeySchema": [
+                {
+                    "AttributeName": "borrowerId",
+                    "KeyType": "HASH"
+                }
+            ],
+            "Projection": {
+                "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+                "ReadCapacityUnits": 5,
+                "WriteCapacityUnits": 5
+            }
+        },
+        {
+            "IndexName": "StatusIndex",
+            "KeySchema": [
+                {
+                    "AttributeName": "status",
+                    "KeyType": "HASH"
+                }
+            ],
+            "Projection": {
+                "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+                "ReadCapacityUnits": 5,
+                "WriteCapacityUnits": 5
+            }
+        }
+    ],
+    "ProvisionedThroughput": {
+        "ReadCapacityUnits": 5,
+        "WriteCapacityUnits": 5
+    }
+}

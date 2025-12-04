@@ -1,0 +1,11 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "defi-lending-backend"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket"
+s3_prefix = "defi-lending-backend"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "JWTSecretKey=\"your-secret-key-here\" SESFromEmail=\"noreply@defi-lending.com\""
+image_repositories = []

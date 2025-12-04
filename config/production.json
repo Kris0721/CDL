@@ -1,0 +1,42 @@
+{
+    "development": {
+        "api": {
+            "url": "http://localhost:3001",
+            "timeout": 30000
+        },
+        "blockchain": {
+            "chainId": 1337,
+            "rpcUrl": "http://127.0.0.1:8545"
+        },
+        "aws": {
+            "region": "us-east-1",
+            "dynamodbEndpoint": "http://localhost:8000"
+        }
+    },
+    "production": {
+        "api": {
+            "url": "https://api.defi-lending.com",
+            "timeout": 30000
+        },
+        "blockchain": {
+            "chainId": 1,
+            "rpcUrl": "https://mainnet.infura.io/v3/YOUR_KEY"
+        },
+        "aws": {
+            "region": "us-east-1"
+        }
+    },
+    "test": {
+        "api": {
+            "url": "http://localhost:3001",
+            "timeout": 30000
+        },
+        "blockchain": {
+            "chainId": 11155111,
+            "rpcUrl": "https://sepolia.infura.io/v3/YOUR_KEY"
+        },
+        "aws": {
+            "region": "us-east-1"
+        }
+    }
+}

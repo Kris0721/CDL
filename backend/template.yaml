@@ -1,0 +1,394 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: DeFi Lending Platform Backend
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.11
+    MemorySize: 512
+    Environment:
+      Variables:
+        USERS_TABLE: !Ref UsersTable
+        LOANS_TABLE: !Ref LoansTable
+        TRANSACTIONS_TABLE: !Ref TransactionsTable
+        KYC_DOCUMENTS_TABLE: !Ref KYCDocumentsTable
+        JWT_SECRET_KEY: !Ref JWTSecretKey
+        SES_FROM_EMAIL: !Ref SESFromEmail
+        KYC_BUCKET: !Ref KYCBucket
+    Layers:
+      - !Ref CommonLayer
+
+Parameters:
+  JWTSecretKey:
+    Type: String
+    NoEcho: true
+    Description: JWT secret key for token signing
+  
+  SESFromEmail:
+    Type: String
+    Description: Email address for sending notifications
+    Default: noreply@defi-lending.com
+
+Resources:
+  # Lambda Layer
+  CommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: defi-common-layer
+      Description: Common utilities for DeFi lending platform
+      ContentUri: layers/common/
+      CompatibleRuntimes:
+        - python3.11
+      RetentionPolicy: Retain
+
+  # DynamoDB Tables
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DeFi-Users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: EmailIndex
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  LoansTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DeFi-Loans
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: loanId
+          AttributeType: S
+        - AttributeName: borrowerId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+      KeySchema:
+        - AttributeName: loanId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: BorrowerIndex
+          KeySchema:
+            - AttributeName: borrowerId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: StatusIndex
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  TransactionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DeFi-Transactions
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: transactionId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: transactionId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserTransactionsIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  KYCDocumentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DeFi-KYCDocuments
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: documentId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: documentId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserDocumentsIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  # S3 Bucket for KYC Documents
+  KYCBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub defi-lending-kyc-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  # API Gateway
+  DeFiAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: DeFi-Lending-API
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  # Auth Functions
+  RegisterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/auth/
+      Handler: register.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+        - SESCrudPolicy:
+            IdentityName: !Ref SESFromEmail
+      Events:
+        Register:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /auth/register
+            Method: post
+
+  LoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/auth/
+      Handler: login.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        Login:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /auth/login
+            Method: post
+
+  RefreshTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/auth/
+      Handler: refresh-token.lambda_handler
+      Events:
+        RefreshToken:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /auth/refresh
+            Method: post
+
+  # User Functions
+  GetProfileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/user/
+      Handler: get-profile.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        GetProfile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /user/profile
+            Method: get
+
+  UploadKYCFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/user/
+      Handler: upload-kyc.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref KYCDocumentsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+        - S3CrudPolicy:
+            BucketName: !Ref KYCBucket
+      Events:
+        UploadKYC:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /user/kyc/upload
+            Method: post
+
+  # Loan Functions
+  RequestLoanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/loan/
+      Handler: request-loan.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LoansTable
+      Events:
+        RequestLoan:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /loans/request
+            Method: post
+
+  GetUserLoansFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/loan/
+      Handler: get-user-loans.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref LoansTable
+      Events:
+        GetUserLoans:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /loans/user
+            Method: get
+
+  ApproveLoanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/loan/
+      Handler: approve-loan.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LoansTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - SESCrudPolicy:
+            IdentityName: !Ref SESFromEmail
+      Events:
+        ApproveLoan:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /loans/approve
+            Method: post
+
+  DisburseLoanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/loan/
+      Handler: disburse-loan.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LoansTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TransactionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - SESCrudPolicy:
+            IdentityName: !Ref SESFromEmail
+      Events:
+        DisburseLoan:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /loans/disburse
+            Method: post
+
+  RepayLoanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/loan/
+      Handler: repay-loan.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LoansTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TransactionsTable
+      Events:
+        RepayLoan:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /loans/repay
+            Method: post
+
+  # Admin Functions
+  GetAllLoansFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/admin/
+      Handler: get-all-loans.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref LoansTable
+      Events:
+        GetAllLoans:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /admin/loans
+            Method: get
+
+  GetPlatformStatsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda-functions/admin/
+      Handler: get-platform-stats.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref LoansTable
+      Events:
+        GetPlatformStats:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DeFiAPI
+            Path: /admin/stats
+            Method: get
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${DeFiAPI}.execute-api.${AWS::Region}.amazonaws.com/prod/
+  
+  UsersTableName:
+    Description: DynamoDB Users table name
+    Value: !Ref UsersTable
+  
+  LoansTableName:
+    Description: DynamoDB Loans table name
+    Value: !Ref LoansTable
+  
+  KYCBucketName:
+    Description: S3 bucket for KYC documents
+    Value: !Ref KYCBucket
