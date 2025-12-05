@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # DeFi Lending Platform - Complete Project
 
 A comprehensive decentralized finance (DeFi) lending platform built with React, AWS Lambda, and Ethereum smart contracts.
@@ -260,3 +261,6 @@ This is a demonstration project. Use at your own risk. Always conduct thorough s
 ---
 
 **Built with ❤️ using React, AWS, and Ethereum**
+=======
+# cloud-based-DeFi-lending-
+>>>>>>> 1f90fad8338a698a5ac4a95df72356dc7dd7517d
