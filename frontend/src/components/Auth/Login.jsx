@@ -5,6 +5,8 @@ import Input from '../shared/Input';
 import Card from '../shared/Card';
 import { login } from '../../services/auth';
 import '../../styles/components/auth.css';
+import { BuilderComponent } from '@builder.io/react';
+import '../../builder-config';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -49,6 +51,7 @@ const Login = () => {
 
     return (
         <div className="auth-container">
+            <BuilderComponent model="login-banner" />
             <Card className="auth-card">
                 <div className="auth-header">
                     <div className="back-to-home" onClick={() => navigate('/')} style={{ cursor: 'pointer', marginBottom: '1rem', color: '#666', display: 'flex', alignItems: 'center', gap: '5px' }}>

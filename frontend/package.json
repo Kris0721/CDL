@@ -9,12 +9,13 @@
         "test": "vitest"
     },
     "dependencies": {
+        "@builder.io/react": "^9.0.0",
+        "aws-amplify": "^6.0.0",
+        "axios": "^1.6.2",
+        "ethers": "^6.9.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "react-router-dom": "^6.20.0",
-        "ethers": "^6.9.0",
-        "axios": "^1.6.2",
-        "aws-amplify": "^6.0.0"
+        "react-router-dom": "^6.20.0"
     },
     "devDependencies": {
         "@vitejs/plugin-react": "^4.2.1",

@@ -1,12 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
+import { BuilderComponent } from '@builder.io/react';
+import '../../builder-config'; // Initialize builder
 
 const Home = () => {
     const navigate = useNavigate();
 
     return (
         <div className="home-page">
+            {/* Builder.io Announcement Slot */}
+            <BuilderComponent model="home-announcement" />
+
             {/* Navigation Bar */}
             <nav className="home-nav">
                 <div className="nav-content">

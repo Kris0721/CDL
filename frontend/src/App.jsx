@@ -11,6 +11,7 @@ import MaintainerDashboard from './components/Admin/MaintainerDashboard';
 import LenderDashboard from './components/Lender/Dashboard';
 import BorrowerDashboard from './components/Borrower/Dashboard';
 import { PlatformDataProvider } from './context/PlatformDataContext';
+import BuilderPage from './components/BuilderPage';
 
 function App() {
     return (
@@ -47,7 +48,10 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
+                    {/* Catch-all for Builder.io pages */}
+                    <Route path="*" element={<BuilderPage />} />
                 </Routes>
+
             </Router>
         </PlatformDataProvider>
     );

@@ -8,6 +8,8 @@ import ProfitHistory from './ProfitHistory';
 import WalletConnect from '../Common/WalletConnect';
 import { getWalletAddress, getBalance } from '../../services/wallet';
 import '../../styles/components/dashboard.css';
+import { BuilderComponent } from '@builder.io/react';
+import '../../builder-config';
 
 const LenderDashboard = () => {
     return (
@@ -80,6 +82,7 @@ const DashboardHome = () => {
 
     return (
         <div className="dashboard-content">
+            <BuilderComponent model="dashboard-header" />
             {/* Header with wallet */}
             <div className="dashboard-header">
                 <div>
