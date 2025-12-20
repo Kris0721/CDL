@@ -8,10 +8,44 @@ const LendFunds = () => {
     const [duration, setDuration] = useState('30');
     const [interestRate, setInterestRate] = useState('8.5');
 
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [loading, setLoading] = useState(false);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // TODO: Implement lending logic
-        console.log('Lending:', { amount, duration, interestRate });
+        setError('');
+        setSuccess('');
+        setLoading(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/lender/deposit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    amount: parseFloat(amount),
+                    duration: parseInt(duration),
+                    interestRate: parseFloat(interestRate)
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to deposit funds');
+            }
+
+            setSuccess('Funds deposited successfully!');
+            setAmount('');
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -22,6 +56,8 @@ const LendFunds = () => {
                 <Card>
                     <h2>Lend to Pool</h2>
                     <form onSubmit={handleSubmit} className="lend-form">
+                        {error && <div className="error-message">{error}</div>}
+                        {success && <div className="success-message">{success}</div>}
                         <Input
                             type="number"
                             label="Amount (USDC)"

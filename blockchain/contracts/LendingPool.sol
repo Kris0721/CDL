@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract LendingPool is Ownable, ReentrancyGuard {
     IERC20 public token;
@@ -24,7 +24,7 @@ contract LendingPool is Ownable, ReentrancyGuard {
     event Deposited(address indexed lender, uint256 amount, uint256 lockDuration, uint256 interestRate);
     event Withdrawn(address indexed lender, uint256 amount, uint256 interest);
     
-    constructor(address _token) {
+    constructor(address _token) Ownable(msg.sender) {
         token = IERC20(_token);
     }
     

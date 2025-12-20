@@ -10,29 +10,30 @@ const ActiveLoans = () => {
     }, []);
 
     const fetchLoans = async () => {
-        // TODO: Implement API call
-        setLoans([
-            {
-                id: 1,
-                amount: '5000 USDC',
-                borrowed: '5000 USDC',
-                interest: '8%',
-                duration: '90 days',
-                remaining: '45 days',
-                amountDue: '5350 USDC',
-                status: 'active'
-            },
-            {
-                id: 2,
-                amount: '10000 USDC',
-                borrowed: '10000 USDC',
-                interest: '7.5%',
-                duration: '60 days',
-                remaining: '30 days',
-                amountDue: '10625 USDC',
-                status: 'active'
-            },
-        ]);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/loans/user`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await response.json();
+
+            if (data.loans) {
+                setLoans(data.loans.map(loan => ({
+                    id: loan.loanId.substring(0, 8),
+                    amount: `${loan.amount} USDC`,
+                    borrowed: `${loan.amount} USDC`,
+                    interest: `${loan.interestRate}%`,
+                    duration: `${loan.duration} days`,
+                    remaining: 'Calculating...', // Simplified for demo
+                    amountDue: `$${loan.totalRepayment.toFixed(2)}`,
+                    status: loan.status
+                })));
+            }
+        } catch (error) {
+            console.error('Error fetching loans:', error);
+        }
     };
 
     return (

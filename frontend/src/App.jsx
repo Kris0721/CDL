@@ -12,6 +12,9 @@ import LenderDashboard from './components/Lender/Dashboard';
 import BorrowerDashboard from './components/Borrower/Dashboard';
 import { PlatformDataProvider } from './context/PlatformDataContext';
 import BuilderPage from './components/BuilderPage';
+import FeatureDetail from './components/FeatureDetail/FeatureDetail';
+import Disclaimer from './components/Disclaimer/Disclaimer';
+import Security from './components/Security/Security';
 
 function App() {
     return (
@@ -48,6 +51,12 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
+
+                    {/* Public Routes */}
+                    <Route path="/feature/:featureId" element={<FeatureDetail />} />
+                    <Route path="/disclaimer" element={<Disclaimer />} />
+                    <Route path="/security" element={<Security />} />
+
                     {/* Catch-all for Builder.io pages */}
                     <Route path="*" element={<BuilderPage />} />
                 </Routes>

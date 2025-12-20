@@ -1,0 +1,10 @@
+{
+  "network": "sepolia",
+  "timestamp": "2025-12-14T07:02:16.277Z",
+  "contracts": {
+    "InterestCalculator": "0xEA193D770281aB70421f7B1bB9AB997e5dd5faC1",
+    "Token": "0xD41396Ec75e3Da4D610017C05B37Cff9dcC9D41D",
+    "LendingPool": "0xedcA46346a688dC40464A735D1De2FCbbc452795",
+    "LoanManager": "0xfE667bb8A1fC0371822935a2Ea5940Ef986aB369"
+  }
+}

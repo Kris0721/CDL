@@ -18,10 +18,50 @@ const RequestLoan = () => {
         });
     };
 
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [loading, setLoading] = useState(false);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // TODO: Implement loan request logic
-        console.log('Loan request:', formData);
+        setError('');
+        setSuccess('');
+        setLoading(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/loans/request`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    amount: parseFloat(formData.amount),
+                    duration: parseInt(formData.duration),
+                    collateralAmount: parseFloat(formData.amount) * 1.5, // Mock collateral
+                    collateralToken: 'ETH'
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to submit loan request');
+            }
+
+            setSuccess('Loan request submitted successfully!');
+            setFormData({
+                amount: '',
+                duration: '30',
+                purpose: '',
+                collateral: ''
+            }); // Reset form
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const calculateInterest = () => {
@@ -38,6 +78,8 @@ const RequestLoan = () => {
                 <Card>
                     <h2>Loan Application</h2>
                     <form onSubmit={handleSubmit} className="loan-form">
+                        {error && <div className="error-message">{error}</div>}
+                        {success && <div className="success-message">{success}</div>}
                         <Input
                             type="number"
                             name="amount"
