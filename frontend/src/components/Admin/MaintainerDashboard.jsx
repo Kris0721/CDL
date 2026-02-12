@@ -13,7 +13,8 @@ const MaintainerDashboard = () => {
         activeLoans: 0,
         totalLiquidity: 0,
         totalDisbursed: 0,
-        pendingKYC: 0
+        pendingKYC: 0,
+        systemHealth: 100
     });
     const [loading, setLoading] = useState(true);
 
@@ -38,7 +39,8 @@ const MaintainerDashboard = () => {
     };
 
     return (
-        <div className="maintainer-dashboard">
+        <div className="maintainer-dashboard glass-effect">
+            <div className="command-center-bg"></div>
             <header className="dashboard-header">
                 <div className="header-content">
                     <div className="brand">
@@ -57,32 +59,32 @@ const MaintainerDashboard = () => {
                 <section className="overview-section">
                     <h2>System Overview</h2>
                     <div className="stats-grid">
-                        <Card className="stat-card">
-                            <div className="stat-icon">👥</div>
+                        <Card className="stat-card glass-card hover-lift">
+                            <div className="stat-icon-wrapper pulse">👥</div>
                             <div className="stat-details">
                                 <h3>Total Users</h3>
-                                <p className="stat-value">{stats.totalUsers.toLocaleString()}</p>
+                                <p className="stat-value animated-number">{stats.totalUsers.toLocaleString()}</p>
                             </div>
                         </Card>
-                        <Card className="stat-card">
-                            <div className="stat-icon">💰</div>
+                        <Card className="stat-card glass-card hover-lift">
+                            <div className="stat-icon-wrapper spin">💰</div>
                             <div className="stat-details">
                                 <h3>Total Liquidity</h3>
-                                <p className="stat-value">${stats.totalLiquidity.toLocaleString()}</p>
+                                <p className="stat-value animated-number">${stats.totalLiquidity.toLocaleString()}</p>
                             </div>
                         </Card>
-                        <Card className="stat-card">
-                            <div className="stat-icon">📉</div>
+                        <Card className="stat-card glass-card hover-lift">
+                            <div className="stat-icon-wrapper">📉</div>
                             <div className="stat-details">
                                 <h3>Active Loans</h3>
-                                <p className="stat-value">{stats.activeLoans}</p>
+                                <p className="stat-value animated-number">{stats.activeLoans}</p>
                             </div>
                         </Card>
-                        <Card className="stat-card">
-                            <div className="stat-icon">⚠️</div>
+                        <Card className="stat-card glass-card hover-lift alert">
+                            <div className="stat-icon-wrapper flash">⚠️</div>
                             <div className="stat-details">
                                 <h3>Pending KYC</h3>
-                                <p className="stat-value">{stats.pendingKYC}</p>
+                                <p className="stat-value animated-number">{stats.pendingKYC}</p>
                             </div>
                         </Card>
                     </div>

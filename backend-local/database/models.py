@@ -16,6 +16,7 @@ class User:
             'walletAddress': row['wallet_address'],
             'kycStatus': row['kyc_status'],
             'isVerified': bool(row['is_verified']),
+            'isPermanent': bool(row.get('is_permanent', 0)),
             'createdAt': row['created_at'],
             'updatedAt': row['updated_at']
         }

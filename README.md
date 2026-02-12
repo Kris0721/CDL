@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # DeFi Lending Platform - Complete Project
 
 A comprehensive decentralized finance (DeFi) lending platform built with React, AWS Lambda, and Ethereum smart contracts.
@@ -7,10 +6,12 @@ A comprehensive decentralized finance (DeFi) lending platform built with React, 
 
 ```
 defi/
-├── backend/                 # AWS Lambda serverless backend
-│   ├── lambda-functions/   # 30+ Lambda functions
-│   ├── layers/            # Shared utilities
-│   └── template.yaml      # AWS SAM infrastructure
+├── backend/                # AWS Lambda serverless backend
+│   ├── lambda-functions/  # Lambda function handlers
+│   ├── layers/            # Lambda layers
+│   ├── template.yaml      # SAM template
+│   └── deploy.sh          # Deployment script
+├── backend-local/          # Local Flask backend (development)
 ├── frontend/              # React frontend application
 │   ├── src/
 │   │   ├── components/   # React components
@@ -21,14 +22,14 @@ defi/
 │   ├── contracts/        # Solidity contracts
 │   ├── scripts/          # Deployment scripts
 │   └── test/             # Contract tests
-├── database/             # DynamoDB schemas
+├── database/             # Database schemas
 └── docs/                 # Documentation
 ```
 
 ## 🚀 Features
 
 ### For Borrowers
-- ✅ User registration with email verification
+- ✅ User registration
 - ✅ KYC document upload and verification
 - ✅ Loan request with customizable terms
 - ✅ Real-time loan status tracking
@@ -54,9 +55,10 @@ defi/
 - Node.js 18+ and npm
 - Python 3.11+ (for backend)
 - AWS CLI configured
-- AWS SAM CLI
+- AWS SAM CLI installed
 - Hardhat (for blockchain)
 - MetaMask or similar Web3 wallet
+
 
 ## 🛠️ Installation
 
@@ -66,12 +68,26 @@ git clone <repository-url>
 cd defi
 ```
 
-### 2. Backend Setup
+### 2. Backend Setup (AWS)
 ```bash
 cd backend
-pip install -r layers/common/python/requirements.txt -t layers/common/python/
-sam build
-sam deploy --guided
+
+# Install AWS CLI
+# Windows: winget install Amazon.AWSCLI
+# macOS: brew install awscli
+# Linux: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && sudo ./aws/install
+
+# Install AWS SAM CLI
+# Windows: winget install Amazon.SAM-CLI
+# macOS: brew install aws-sam-cli
+
+# Configure AWS credentials
+aws configure
+
+# Deploy infrastructure and functions
+./deploy.sh
+# or
+sam build && sam deploy --guided
 ```
 
 ### 3. Frontend Setup
@@ -79,7 +95,7 @@ sam deploy --guided
 cd frontend
 npm install
 cp .env.example .env
-# Edit .env with your API endpoint
+# Edit .env with your AWS API Gateway endpoint
 npm run dev
 ```
 
@@ -96,15 +112,20 @@ npx hardhat run scripts/deploy.js --network sepolia
 
 ## 🔑 Environment Variables
 
-### Backend (.env)
+### Backend (AWS)
+Set in SAM template parameters or environment variables:
 ```
+USERS_TABLE=DeFi-Users
+LOANS_TABLE=DeFi-Loans
+TRANSACTIONS_TABLE=DeFi-Transactions
+KYC_DOCUMENTS_TABLE=DeFi-KYCDocuments
+KYC_BUCKET=defi-lending-kyc-{account-id}
 JWT_SECRET_KEY=your-secret-key
-SES_FROM_EMAIL=noreply@yourdomain.com
 ```
 
 ### Frontend (.env)
 ```
-VITE_API_URL=https://your-api-gateway-url
+VITE_AWS_API_URL=https://your-api-id.execute-api.us-east-1.amazonaws.com/prod
 VITE_CONTRACT_ADDRESS=0x...
 VITE_CHAIN_ID=11155111
 ```
@@ -116,12 +137,12 @@ PRIVATE_KEY=your_private_key
 ETHERSCAN_API_KEY=your_etherscan_key
 ```
 
+
 ## 📚 API Documentation
 
 ### Authentication
 - `POST /auth/register` - Register new user
 - `POST /auth/login` - User login
-- `POST /auth/verify-otp` - Verify email
 - `POST /auth/refresh` - Refresh JWT token
 
 ### Loans
@@ -165,6 +186,8 @@ npm test
 ```bash
 cd backend
 ./deploy.sh
+# or
+sam build && sam deploy
 ```
 
 ### Frontend (Vercel/Netlify)
@@ -184,11 +207,11 @@ npx hardhat run scripts/verify.js --network mainnet
 ## 📊 Architecture
 
 ### Backend Architecture
-- **Serverless**: AWS Lambda functions
-- **Database**: DynamoDB with GSIs
-- **Storage**: S3 for KYC documents
-- **Email**: AWS SES
-- **API**: API Gateway with JWT auth
+- **Serverless**: AWS Lambda (Python 3.11)
+- **Database**: Amazon DynamoDB (NoSQL)
+- **Storage**: Amazon S3 for KYC documents
+- **API**: Amazon API Gateway
+- **Monitoring**: Amazon CloudWatch
 
 ### Frontend Architecture
 - **Framework**: React 18 with Vite
@@ -201,6 +224,7 @@ npx hardhat run scripts/verify.js --network mainnet
 - **Security**: OpenZeppelin contracts
 - **Testing**: Hardhat with Chai
 - **Network**: Ethereum (Sepolia testnet)
+
 
 ## 🔒 Security Features
 
@@ -243,7 +267,6 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
 For issues and questions:
 - GitHub Issues: [Create an issue](../../issues)
 - Documentation: [docs/](./docs/)
-- Email: support@yourdomain.com
 
 ## 🗺️ Roadmap
 
@@ -261,6 +284,4 @@ This is a demonstration project. Use at your own risk. Always conduct thorough s
 ---
 
 **Built with ❤️ using React, AWS, and Ethereum**
-=======
-# cloud-based-DeFi-lending-
->>>>>>> 1f90fad8338a698a5ac4a95df72356dc7dd7517d
+

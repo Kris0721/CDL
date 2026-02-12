@@ -27,14 +27,13 @@ class LoanService:
     
     @staticmethod
     def request_loan(borrower_id, amount, duration_days, collateral_amount=None, collateral_token=None):
-        """Request a new loan"""
+        """Request a new loan (Marketplace)"""
         # Validate duration
-        if duration_days < 30 or duration_days > 180:
-            return {'error': 'Duration must be between 30 and 180 days'}, 400
+        if duration_days < 7 or duration_days > 365:
+            return {'error': 'Duration must be between 7 and 365 days'}, 400
         
-        # Calculate interest
-        interest_rate = LoanService.calculate_interest_rate(duration_days)
-        total_repayment = LoanService.calculate_total_repayment(amount, interest_rate, duration_days)
+        # Marketplace Model: Initial interest rate is 0 or placeholder, status is 'open'
+        # Lenders will offer rates.
         
         # Create loan
         loan_id = str(uuid.uuid4())
@@ -45,18 +44,77 @@ class LoanService:
                (loan_id, borrower_id, amount, interest_rate, duration, total_repayment, 
                 collateral_amount, collateral_token, status, created_at, updated_at)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-            (loan_id, borrower_id, amount, interest_rate, duration_days, total_repayment,
-             collateral_amount, collateral_token, 'pending', now, now)
+            (loan_id, borrower_id, amount, 0.0, duration_days, 0.0,
+             collateral_amount, collateral_token, 'open', now, now)
         )
         
         return {
-            'message': 'Loan request submitted successfully',
+            'message': 'Loan request posted to marketplace',
             'loanId': loan_id,
             'amount': amount,
-            'interestRate': interest_rate,
             'duration': duration_days,
-            'totalRepayment': total_repayment
+            'status': 'open'
         }, 201
+
+    @staticmethod
+    def accept_offer(loan_id, offer_id, borrower_id):
+        """Borrower accepts a lender's offer"""
+        # Validate loan ownership
+        loan = db.execute_query('SELECT * FROM loans WHERE loan_id = ? AND borrower_id = ?', (loan_id, borrower_id))
+        if not loan:
+            return {'error': 'Loan not found or unauthorized'}, 404
+        loan = loan[0]
+        
+        if loan['status'] != 'open':
+            return {'error': 'Loan is not open for offers'}, 400
+
+        # Validate offer
+        offer = db.execute_query('SELECT * FROM loan_offers WHERE offer_id = ? AND loan_id = ?', (offer_id, loan_id))
+        if not offer:
+            return {'error': 'Offer not found'}, 404
+        offer = offer[0]
+
+        now = int(time.time())
+        interest_rate = offer['interest_rate']
+        total_repayment = LoanService.calculate_total_repayment(loan['amount'], interest_rate, loan['duration'])
+
+        # Update Loan
+        db.execute_update(
+            '''UPDATE loans 
+               SET interest_rate = ?, total_repayment = ?, status = ?, updated_at = ?
+               WHERE loan_id = ?''',
+            (interest_rate, total_repayment, 'approved_pending_disbursement', now, loan_id)
+        )
+
+        # Update Offers
+        db.execute_update('UPDATE loan_offers SET status = "accepted" WHERE offer_id = ?', (offer_id,))
+        db.execute_update('UPDATE loan_offers SET status = "rejected" WHERE loan_id = ? AND offer_id != ?', (loan_id, offer_id))
+
+        return {
+            'message': 'Offer accepted successfully',
+            'loanId': loan_id,
+            'newStatus': 'approved_pending_disbursement',
+            'interestRate': interest_rate
+        }, 200
+
+    @staticmethod
+    def get_loan_offers(loan_id, borrower_id):
+        """Get offers for a specific loan"""
+        # Ensure user owns the loan
+        loan = db.execute_query('SELECT * FROM loans WHERE loan_id = ? AND borrower_id = ?', (loan_id, borrower_id))
+        if not loan:
+            return {'error': 'Loan not found or unauthorized'}, 404
+            
+        offers = db.execute_query(
+            '''SELECT o.*, u.full_name as lender_name 
+               FROM loan_offers o
+               JOIN users u ON o.lender_id = u.user_id
+               WHERE o.loan_id = ?
+               ORDER BY o.interest_rate ASC''',
+            (loan_id,)
+        )
+        
+        return {'offers': [dict(o) for o in offers]}, 200
     
     @staticmethod
     def get_user_loans(user_id):
@@ -105,7 +163,7 @@ class LoanService:
             ('approved', now, loan_id)
         )
         
-        print(f"[EMAIL] Loan {loan_id} approved for borrower {loan['borrower_id']}")
+
         
         return {'message': 'Loan approved successfully'}, 200
     
@@ -131,7 +189,7 @@ class LoanService:
             ('rejected', now, loan_id)
         )
         
-        print(f"[EMAIL] Loan {loan_id} rejected. Reason: {reason}")
+
         
         return {'message': 'Loan rejected'}, 200
     
@@ -170,7 +228,7 @@ class LoanService:
             (tx_id, loan['borrower_id'], loan_id, 'loan_disbursement', loan['amount'], 'completed', now)
         )
         
-        print(f"[EMAIL] Loan {loan_id} disbursed to borrower {loan['borrower_id']}")
+
         
         return {'message': 'Loan disbursed successfully', 'transactionId': tx_id}, 200
     
@@ -214,7 +272,7 @@ class LoanService:
         )
         
         if new_status == 'completed':
-            print(f"[EMAIL] Loan {loan_id} fully repaid by borrower {borrower_id}")
+            pass  # Loan fully repaid
         
         return {
             'message': 'Repayment successful',

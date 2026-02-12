@@ -1,0 +1,8 @@
+{
+  "network": "sepolia",
+  "timestamp": "2026-02-12T10:49:37.612Z",
+  "contracts": {
+    "Token": "0x7B6E891e22075C446D4B9c78B9233be10653b8Dc",
+    "P2PLoanManager": "0xA4290767Fa881877Fde800a0D9b5b1E254C43886"
+  }
+}

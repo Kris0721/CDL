@@ -91,4 +91,20 @@ CREATE TABLE IF NOT EXISTS deposits (
     FOREIGN KEY (lender_id) REFERENCES users(user_id)
 );
 
+
 CREATE INDEX IF NOT EXISTS idx_deposits_lender ON deposits(lender_id);
+
+-- Loan Offers Table (for P2P negotiation)
+CREATE TABLE IF NOT EXISTS loan_offers (
+    offer_id TEXT PRIMARY KEY,
+    loan_id TEXT NOT NULL,
+    lender_id TEXT NOT NULL,
+    interest_rate REAL NOT NULL,
+    status TEXT DEFAULT 'pending', -- pending, accepted, rejected
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (loan_id) REFERENCES loans(loan_id),
+    FOREIGN KEY (lender_id) REFERENCES users(user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_loan_offers_loan ON loan_offers(loan_id);
+CREATE INDEX IF NOT EXISTS idx_loan_offers_lender ON loan_offers(lender_id);

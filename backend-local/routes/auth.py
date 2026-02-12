@@ -38,25 +38,13 @@ def register():
     password = data.get('password')
     full_name = data.get('fullName')
     role = data.get('role', 'borrower')
+    wallet_address = data.get('walletAddress')
+    wallet_name = data.get('walletName')
     
     if not all([email, password, full_name]):
         return jsonify({'error': 'Missing required fields'}), 400
     
-    result, status = AuthService.register_user(email, password, full_name, role)
-    return jsonify(result), status
-
-@auth_bp.route('/verify-otp', methods=['POST'])
-def verify_otp():
-    """Verify OTP"""
-    data = request.get_json()
-    
-    email = data.get('email')
-    otp = data.get('otp')
-    
-    if not all([email, otp]):
-        return jsonify({'error': 'Missing required fields'}), 400
-    
-    result, status = AuthService.verify_otp(email, otp)
+    result, status = AuthService.register_user(email, password, full_name, role, wallet_address, wallet_name)
     return jsonify(result), status
 
 @auth_bp.route('/login', methods=['POST'])

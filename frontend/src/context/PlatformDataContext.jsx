@@ -15,6 +15,10 @@ export const usePlatformData = () => {
 // Platform Data Provider Component
 export const PlatformDataProvider = ({ children }) => {
     // Initialize from localStorage or use defaults
+    const [apiMode, setApiMode] = useState(() => {
+        return localStorage.getItem('apiMode') || 'local';
+    });
+
     const [platformData, setPlatformData] = useState(() => {
         const saved = localStorage.getItem('platformData');
         return saved ? JSON.parse(saved) : {
@@ -203,8 +207,19 @@ export const PlatformDataProvider = ({ children }) => {
         localStorage.setItem('platformData', JSON.stringify(defaultData));
     };
 
+    // Toggle API Mode
+    const toggleApiMode = () => {
+        const newMode = apiMode === 'local' ? 'cloud' : 'local';
+        setApiMode(newMode);
+        localStorage.setItem('apiMode', newMode);
+        // In a real app, this might trigger a reload or context update
+        console.log(`Switched to ${newMode} mode`);
+    };
+
     const value = {
         platformData,
+        apiMode,
+        toggleApiMode,
         addLoan,
         addLending,
         repayLoan,

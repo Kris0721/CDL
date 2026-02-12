@@ -1,10 +1,10 @@
 {
   "network": "sepolia",
-  "timestamp": "2025-12-14T07:02:16.277Z",
+  "timestamp": "2026-02-12T10:24:37.559Z",
   "contracts": {
-    "InterestCalculator": "0xEA193D770281aB70421f7B1bB9AB997e5dd5faC1",
-    "Token": "0xD41396Ec75e3Da4D610017C05B37Cff9dcC9D41D",
-    "LendingPool": "0xedcA46346a688dC40464A735D1De2FCbbc452795",
-    "LoanManager": "0xfE667bb8A1fC0371822935a2Ea5940Ef986aB369"
+    "InterestCalculator": "0x876E71E5A29517a8f0f211EFfC9f015c32399eF1",
+    "Token": "0x7B6E891e22075C446D4B9c78B9233be10653b8Dc",
+    "LendingPool": "0xf8812673E01e58fC0039869c479E7d1a910E73e0",
+    "LoanManager": "0x9D5ad5E89D5F723a35652c9fdcFB4Dc8977D5f07"
   }
 }

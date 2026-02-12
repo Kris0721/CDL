@@ -10,7 +10,9 @@ import '../../styles/components/dashboard.css';
 
 const BorrowerDashboard = () => {
     return (
-        <div className="dashboard-layout borrower-theme">
+        <div className="dashboard-layout borrower-theme glass-effect">
+            <div className="watermark-overlay"></div>
+            <div className="ambient-background"></div>
             <Navbar />
             <div className="dashboard-container">
                 <Sidebar role="borrower" />
@@ -113,33 +115,52 @@ const DashboardHome = () => {
                 </div>
             </div>
 
-            {/* Stats grid with credit score emphasis */}
+            {/* Stats grid with animated cards */}
             <div className="stats-grid">
                 <StatCard
                     title="Total Borrowed"
                     value={`$${stats.totalBorrowed.toLocaleString()}`}
                     icon="💳"
                     color="blue"
+                    trend="+12%"
+                    trendLabel="vs last month"
                 />
                 <StatCard
                     title="Active Loans"
                     value={stats.activeLoans}
                     icon="📝"
                     color="orange"
+                    trend="2"
+                    trendLabel="active now"
                 />
                 <StatCard
                     title="Total Repaid"
                     value={`$${stats.totalRepaid.toLocaleString()}`}
                     icon="✅"
                     color="green"
+                    trend="100%"
+                    trendLabel="on time"
                 />
-                <div className={`stat-card stat-credit ${getCreditScoreColor(stats.creditScore)}`}>
+                <div className={`stat-card stat-credit ${getCreditScoreColor(stats.creditScore)} glass-card glowing-border`}>
                     <div className="stat-header">
                         <span className="stat-icon">⭐</span>
+                        <div className="credit-score-ring">
+                            <svg viewBox="0 0 36 36" className="circular-chart">
+                                <path className="circle-bg"
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                                <path className="circle"
+                                    strokeDasharray={`${(stats.creditScore / 850) * 100}, 100`}
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                            </svg>
+                        </div>
                     </div>
-                    <h3 className="stat-title">Credit Score</h3>
-                    <p className="stat-value">{stats.creditScore}</p>
-                    <span className="credit-label">{getCreditScoreLabel(stats.creditScore)}</span>
+                    <div className="stat-content">
+                        <h3 className="stat-title">Credit Score</h3>
+                        <p className="stat-value animated-number">{stats.creditScore}</p>
+                        <span className="credit-label">{getCreditScoreLabel(stats.creditScore)}</span>
+                    </div>
                 </div>
             </div>
 
@@ -284,13 +305,21 @@ const DashboardHome = () => {
     );
 };
 
-const StatCard = ({ title, value, icon, color }) => (
-    <div className={`stat-card stat-${color}`}>
+const StatCard = ({ title, value, icon, color, trend, trendLabel }) => (
+    <div className={`stat-card stat-${color} glass-card hover-lift`}>
         <div className="stat-header">
-            <span className="stat-icon">{icon}</span>
+            <span className="stat-icon-wrapper">{icon}</span>
+            {trend && (
+                <span className="stat-trend positive">
+                    {trend} <span className="trend-label">{trendLabel}</span>
+                </span>
+            )}
         </div>
-        <h3 className="stat-title">{title}</h3>
-        <p className="stat-value">{value}</p>
+        <div className="stat-content">
+            <h3 className="stat-title">{title}</h3>
+            <p className="stat-value animated-number">{value}</p>
+        </div>
+        <div className="card-shine"></div>
     </div>
 );
 

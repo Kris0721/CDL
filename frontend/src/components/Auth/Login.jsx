@@ -27,16 +27,30 @@ const Login = () => {
 
         try {
             const response = await login(formData.email, formData.password);
+
+            // Store authentication data
             localStorage.setItem('token', response.token);
             localStorage.setItem('userRole', response.role);
+            localStorage.setItem('user', JSON.stringify(response.user));
 
             // Redirect based on role
-            if (response.role === 'maintainer') {
-                navigate('/maintainer');
-            } else if (response.role === 'lender') {
-                navigate('/lender');
-            } else if (response.role === 'borrower') {
-                navigate('/borrower');
+            const role = response.role.toLowerCase();
+
+            switch (role) {
+                case 'maintainer':
+                case 'admin':
+                    navigate('/maintainer');
+                    break;
+                case 'lender':
+                    navigate('/lender');
+                    break;
+                case 'borrower':
+                    navigate('/borrower');
+                    break;
+                default:
+                    // Fallback to borrower dashboard if role is unknown
+                    navigate('/borrower');
+                    console.warn(`Unknown role: ${role}, redirecting to borrower dashboard`);
             }
         } catch (err) {
             setError(err.message || 'Login failed. Please try again.');

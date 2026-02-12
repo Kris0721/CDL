@@ -1,0 +1,7 @@
+{
+  "network": "sepolia",
+  "timestamp": "2026-02-12T12:45:13.531Z",
+  "contracts": {
+    "P2PLoanManagerETH": "0x544489125FcCdB649694a693B26aEC1aBaCe5C56"
+  }
+}

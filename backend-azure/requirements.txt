@@ -1,0 +1,28 @@
+# Azure Functions Python Dependencies
+
+# Azure SDK
+azure-functions>=1.18.0
+azure-cosmos>=4.5.1
+azure-storage-blob>=12.19.0
+azure-communication-email>=1.0.0
+azure-identity>=1.15.0
+
+# Web Framework & HTTP
+requests>=2.31.0
+urllib3>=2.1.0
+
+# Authentication & Security
+PyJWT>=2.8.0
+bcrypt>=4.1.2
+python-jose[cryptography]>=3.3.0
+
+# Data Processing
+python-dateutil>=2.8.2
+python-dotenv>=1.0.0
+
+# Validation
+email-validator>=2.1.0
+pydantic>=2.5.0
+
+# Utilities
+uuid>=1.30

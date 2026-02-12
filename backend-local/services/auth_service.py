@@ -70,7 +70,7 @@ class AuthService:
             return None
     
     @staticmethod
-    def register_user(email, password, full_name, role='borrower'):
+    def register_user(email, password, full_name, role='borrower', wallet_address=None, wallet_name=None):
         """Register a new user"""
         # Check if user exists
         existing = db.execute_query(
@@ -81,59 +81,38 @@ class AuthService:
         if existing:
             return {'error': 'Email already registered'}, 400
         
-        # Create user
+        # Create user without OTP verification
         user_id = str(uuid.uuid4())
         password_hash = AuthService.hash_password(password)
-        otp_code = AuthService.generate_otp()
-        otp_expires = int(time.time()) + 600  # 10 minutes
         now = int(time.time())
         
+        # Insert user with wallet details and verify immediately
         db.execute_update(
             '''INSERT INTO users 
-               (user_id, email, password_hash, full_name, role, otp_code, otp_expires_at, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-            (user_id, email, password_hash, full_name, role, otp_code, otp_expires, now, now)
+               (user_id, email, password_hash, full_name, role, kyc_status, is_verified, wallet_address, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, 'approved', 1, ?, ?, ?)''',
+            (user_id, email, password_hash, full_name, role, wallet_address, now, now)
         )
         
-        # In production, send email with OTP
-        print(f"[EMAIL] OTP for {email}: {otp_code}")
+        # Generate tokens immediately
+        tokens = AuthService.generate_tokens(user_id, email, role)
         
         return {
-            'message': 'Registration successful. Please verify your email.',
-            'userId': user_id,
-            'otp': otp_code  # Remove in production
+            'message': 'Registration successful',
+            'user': {
+                'userId': user_id,
+                'email': email,
+                'fullName': full_name,
+                'role': role,
+                'walletAddress': wallet_address,
+                'isVerified': True
+            },
+            'token': tokens['accessToken'],
+            'role': role,
+            'tokens': tokens
         }, 201
     
-    @staticmethod
-    def verify_otp(email, otp_code):
-        """Verify OTP and activate user"""
-        user = db.execute_query(
-            'SELECT * FROM users WHERE email = ?',
-            (email,)
-        )
-        
-        if not user:
-            return {'error': 'User not found'}, 404
-        
-        user = user[0]
-        
-        if user['is_verified']:
-            return {'error': 'User already verified'}, 400
-        
-        if user['otp_code'] != otp_code:
-            return {'error': 'Invalid OTP'}, 400
-        
-        if int(time.time()) > user['otp_expires_at']:
-            return {'error': 'OTP expired'}, 400
-        
-        # Verify user
-        db.execute_update(
-            'UPDATE users SET is_verified = 1, otp_code = NULL, otp_expires_at = NULL WHERE email = ?',
-            (email,)
-        )
-        
-        return {'message': 'Email verified successfully'}, 200
-    
+
     @staticmethod
     def login(email, password):
         """Login user"""
@@ -150,8 +129,8 @@ class AuthService:
         if not AuthService.verify_password(password, user['password_hash']):
             return {'error': 'Invalid credentials'}, 401
         
-        if not user['is_verified']:
-            return {'error': 'Please verify your email first'}, 403
+        # if not user['is_verified']:
+        #     return {'error': 'Please verify your email first.'}, 403
         
         # Generate tokens
         tokens = AuthService.generate_tokens(user['user_id'], user['email'], user['role'])

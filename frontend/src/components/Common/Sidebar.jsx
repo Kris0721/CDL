@@ -14,6 +14,7 @@ const Sidebar = ({ role }) => {
         ],
         lender: [
             { path: '/lender', label: 'Dashboard', icon: '📊' },
+            { path: '/lender/marketplace', label: 'Marketplace', icon: '🛒' },
             { path: '/lender/lend', label: 'Lend Funds', icon: '💰' },
             { path: '/lender/loans', label: 'Active Loans', icon: '📋' },
             { path: '/lender/profits', label: 'Profit History', icon: '📈' }

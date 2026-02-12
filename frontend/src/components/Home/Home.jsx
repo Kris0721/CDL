@@ -3,14 +3,135 @@ import { useNavigate } from 'react-router-dom';
 import './Home.css';
 import { BuilderComponent } from '@builder.io/react';
 import '../../builder-config'; // Initialize builder
+import { API_KEYS, API_ENDPOINTS } from '../../config/apiKeys';
 import LoanCalculator from '../LoanCalculator/LoanCalculator';
+import Web3Debug from '../shared/Web3Debug';
+
+import { usePlatformData } from '../../context/PlatformDataContext';
 
 const Home = () => {
     const navigate = useNavigate();
+    const { apiMode, toggleApiMode } = usePlatformData();
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+    const [showTickers, setShowTickers] = useState(true);
+    const [theme, setTheme] = useState('dark'); // 'dark' (default) or 'light'
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    };
+
+    // Ticker States
+    const [cryptoData, setCryptoData] = useState(null);
+    const [currencyData, setCurrencyData] = useState(null);
+
+    // Fetch Crypto Data (CoinLayer)
+    React.useEffect(() => {
+        if (!showTickers) return; // Stop fetching if tickers are hidden
+
+        const fetchCrypto = async () => {
+            try {
+                // Fetch Crypto (CoinLayer) - HTTP Only usually for free tier
+                // CoinLayer Free Endpoint: http://api.coinlayer.com/live?access_key=KEY
+                try {
+                    const cryptoRes = await fetch(`${API_ENDPOINTS.CRYPTO}?access_key=${API_KEYS.CRYPTO_API_KEY}&symbols=BTC,ETH`, {
+                        signal: AbortSignal.timeout(3000) // Timeout after 3s to show fallback quickly
+                    });
+                    const cryptoJson = await cryptoRes.json();
+                    if (cryptoJson.success) {
+                        setCryptoData(cryptoJson.rates);
+                    } else {
+                        throw new Error('CoinLayer API returned success: false');
+                    }
+                } catch (e) {
+                    console.warn("Crypto API failed, using fallback:", e);
+                    setCryptoData({ BTC: 65432.10, ETH: 3456.78 }); // Mock Data
+                }
+
+                // Fetch Currency (Amdoren) - Likely CORS blocked on localhost
+                // We will default to mock data immediately if we suspect CORS, or try-catch it.
+                try {
+                    const pairs = [
+                        { from: 'USD', to: 'INR' },
+                        { from: 'GBP', to: 'USD' },
+                        { from: 'USD', to: 'JPY' }
+                    ];
+
+                    const currencyResults = {};
+
+                    // Parallel fetch with timeout
+                    await Promise.all(pairs.map(async (pair) => {
+                        try {
+                            const res = await fetch(`${API_ENDPOINTS.CURRENCY}?api_key=${API_KEYS.CURRENCY_API_KEY}&from=${pair.from}&to=${pair.to}`, {
+                                signal: AbortSignal.timeout(3000)
+                            });
+                            if (!res.ok) throw new Error('Network response was not ok');
+                            const json = await res.json();
+                            if (json.amount) {
+                                currencyResults[`${pair.from}${pair.to}`] = json.amount;
+                            }
+                        } catch (innerErr) {
+                            // Individual pair failure - ignore or set default
+                        }
+                    }));
+
+                    // If we got results, use them. If empty (due to all failing), throw to hit fallback.
+                    if (Object.keys(currencyResults).length > 0) {
+                        setCurrencyData(currencyResults);
+                    } else {
+                        throw new Error("No currency data fetched");
+                    }
+
+                } catch (e) {
+                    console.warn("Currency API failed, using fallback:", e);
+                    setCurrencyData({ USDINR: 83.50, GBPUSD: 1.27, USDJPY: 148.5 }); // Mock Data
+                }
+
+            } catch (error) {
+                console.error("Failed to fetch tickers:", error);
+                // Last resort fallback
+                setCryptoData(prev => prev || { BTC: 65000, ETH: 3500 });
+                setCurrencyData(prev => prev || { USDINR: 83.50, GBPUSD: 1.27, USDJPY: 148.5 });
+            }
+        };
+
+        fetchCrypto();
+        const interval = setInterval(fetchCrypto, 60000); // Update every minute
+        return () => clearInterval(interval);
+    }, [showTickers]);
 
     return (
-        <div className="home-page">
+        <div className={`home-page ${theme === 'light' ? 'light-theme' : ''}`}>
+            <Web3Debug />
+            <div className="watermark-overlay"></div>
+            {/* Live Ticker Bar */}
+            {showTickers && (
+                <div className="ticker-bar">
+                    <div className="ticker-left">
+                        {cryptoData ? (
+                            <>
+                                <span className="ticker-label">CRYPTO (USD):</span>
+                                <span className="ticker-item">BTC: ${cryptoData.BTC?.toFixed(2)}</span>
+                                <span className="ticker-item">ETH: ${cryptoData.ETH?.toFixed(2)}</span>
+                            </>
+                        ) : (
+                            <span className="ticker-loading">Loading Crypto...</span>
+                        )}
+                    </div>
+                    <div className="ticker-right">
+                        {currencyData ? (
+                            <>
+                                <span className="ticker-label">FOREX:</span>
+                                <span className="ticker-item">USD/INR: {currencyData.USDINR}</span>
+                                <span className="ticker-item">GBP/USD: {currencyData.GBPUSD}</span>
+                                <span className="ticker-item">USD/JPY: {currencyData.USDJPY}</span>
+                            </>
+                        ) : (
+                            <span className="ticker-loading">Loading Forex...</span>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Builder.io Announcement Slot */}
             <BuilderComponent model="home-announcement" />
 
@@ -28,6 +149,12 @@ const Home = () => {
                     </div>
                     <div className="nav-links">
                         <button
+                            className="nav-btn nav-btn-toggle"
+                            onClick={() => setShowTickers(!showTickers)}
+                        >
+                            {showTickers ? 'Hide Tickers' : 'Show Tickers'}
+                        </button>
+                        <button
                             className="nav-btn nav-btn-login"
                             onClick={() => navigate('/login')}
                         >
@@ -38,6 +165,20 @@ const Home = () => {
                             onClick={() => navigate('/register')}
                         >
                             Get Started
+                        </button>
+                        <button
+                            className="nav-btn nav-btn-toggle"
+                            onClick={toggleTheme}
+                            style={{ marginLeft: '10px' }}
+                        >
+                            {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+                        </button>
+                        <button
+                            className="nav-btn nav-btn-toggle"
+                            onClick={toggleApiMode}
+                            style={{ marginLeft: '10px', backgroundColor: apiMode === 'cloud' ? '#6366f1' : 'rgba(255,255,255,0.1)' }}
+                        >
+                            {apiMode === 'cloud' ? '☁️ Cloud' : '💻 Local'}
                         </button>
                     </div>
                 </div>

@@ -39,3 +39,42 @@ def get_deposits():
         
     result, status = LenderService.get_deposits(request.user['userId'])
     return jsonify(result), status
+@lender_bp.route('/marketplace', methods=['GET'])
+@require_auth
+def get_marketplace():
+    """Get open loan requests"""
+    if request.user.get('role') != 'lender':
+        return jsonify({'error': 'Unauthorized'}), 403
+    result, status = LenderService.get_open_requests()
+    return jsonify(result), status
+
+@lender_bp.route('/offer', methods=['POST'])
+@require_auth
+def make_offer():
+    """Make an offer"""
+    if request.user.get('role') != 'lender':
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    data = request.get_json()
+    loan_id = data.get('loanId')
+    interest_rate = data.get('interestRate')
+    
+    if not all([loan_id, interest_rate]):
+        return jsonify({'error': 'Missing required fields'}), 400
+        
+    result, status = LenderService.make_offer(
+        request.user['userId'],
+        loan_id,
+        interest_rate
+    )
+    return jsonify(result), status
+
+@lender_bp.route('/my-offers', methods=['GET'])
+@require_auth
+def get_lender_offers():
+    """Get offers made by current lender"""
+    if request.user.get('role') != 'lender':
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    result, status = LenderService.get_lender_offers(request.user['userId'])
+    return jsonify(result), status

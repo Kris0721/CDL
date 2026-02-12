@@ -114,3 +114,25 @@ def repay_loan():
     )
     
     return jsonify(result), status
+@loans_bp.route('/<loan_id>/offers', methods=['GET'])
+@require_auth
+def get_loan_offers(loan_id):
+    """Get offers for a loan"""
+    print(f"DEBUG: Fetching offers for loan {loan_id} by user {request.user['userId']}")
+    result, status = LoanService.get_loan_offers(loan_id, request.user['userId'])
+    print(f"DEBUG: Found {len(result.get('offers', []))} offers")
+    return jsonify(result), status
+
+@loans_bp.route('/accept-offer', methods=['POST'])
+@require_auth
+def accept_offer():
+    """Accept an offer"""
+    data = request.get_json()
+    loan_id = data.get('loanId')
+    offer_id = data.get('offerId')
+    
+    if not all([loan_id, offer_id]):
+        return jsonify({'error': 'Missing required fields'}), 400
+        
+    result, status = LoanService.accept_offer(loan_id, offer_id, request.user['userId'])
+    return jsonify(result), status

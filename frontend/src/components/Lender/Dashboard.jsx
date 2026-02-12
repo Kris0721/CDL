@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
+import { useWeb3 } from '../../context/Web3Context';
 import Navbar from '../Common/Navbar';
 import Sidebar from '../Common/Sidebar';
 import LendFunds from './LendFunds';
 import ActiveLoans from './ActiveLoans';
+import Marketplace from './Marketplace';
 import ProfitHistory from './ProfitHistory';
 import WalletConnect from '../Common/WalletConnect';
 import { getWalletAddress, getBalance } from '../../services/wallet';
@@ -13,13 +15,16 @@ import '../../builder-config';
 
 const LenderDashboard = () => {
     return (
-        <div className="dashboard-layout lender-theme">
+        <div className="dashboard-layout lender-theme glass-effect">
+            <div className="watermark-overlay"></div>
+            <div className="ambient-background-neon"></div>
             <Navbar />
             <div className="dashboard-container">
                 <Sidebar role="lender" />
                 <main className="dashboard-main">
                     <Routes>
                         <Route index element={<DashboardHome />} />
+                        <Route path="marketplace" element={<Marketplace />} />
                         <Route path="lend" element={<LendFunds />} />
                         <Route path="loans" element={<ActiveLoans />} />
                         <Route path="profits" element={<ProfitHistory />} />
@@ -31,36 +36,25 @@ const LenderDashboard = () => {
 };
 
 const DashboardHome = () => {
-    const navigate = useNavigate();
+    const { currentAccount, connectWallet, isConnecting } = useWeb3();
+    const navigate = useNavigate(); // Add navigation hook
     const [walletAddress, setWalletAddress] = useState('');
     const [ethBalance, setEthBalance] = useState('0');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadWalletInfo();
-    }, []);
-
-    const loadWalletInfo = async () => {
-        try {
-            // Get wallet from mock auth (from localStorage after login)
+        if (currentAccount) {
+            setWalletAddress(currentAccount);
+        } else {
+            // Fallback to mock if needed, or just empty
             const userRole = localStorage.getItem('userRole');
             if (userRole === 'lender') {
-                setWalletAddress('0x23e5c170066540dd241bf0a3505be482a1619e50');
+                // Keep mock for now if not connected, but indicate it's mock?
+                // or just leave empty to encourage connection
+                setWalletAddress('');
             }
-
-            // Try to get real MetaMask wallet if connected
-            const connectedWallet = await getWalletAddress();
-            if (connectedWallet) {
-                setWalletAddress(connectedWallet);
-                const balance = await getBalance(connectedWallet);
-                setEthBalance(parseFloat(balance).toFixed(4));
-            }
-        } catch (error) {
-            console.log('Wallet not connected');
-        } finally {
-            setLoading(false);
         }
-    };
+    }, [currentAccount]);
 
     const formatAddress = (addr) => {
         if (!addr) return 'Not connected';
@@ -94,7 +88,13 @@ const DashboardHome = () => {
                         <span className="wallet-icon">🦊</span>
                         <div>
                             <div className="wallet-label">Your Wallet</div>
-                            <div className="wallet-address-large">{formatAddress(walletAddress)}</div>
+                            <div className="wallet-address-large">
+                                {walletAddress ? formatAddress(walletAddress) : (
+                                    <button onClick={connectWallet} className="connect-btn-small">
+                                        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                     {ethBalance !== '0' && (
@@ -112,6 +112,7 @@ const DashboardHome = () => {
                     title="Total Lent"
                     value={`$${stats.totalLent.toLocaleString()}`}
                     change="+5%"
+                    changeLabel="this week"
                     icon="💵"
                     color="green"
                 />
@@ -119,6 +120,7 @@ const DashboardHome = () => {
                     title="Active Loans"
                     value={stats.activeLoans}
                     change="+2"
+                    changeLabel="new borrowers"
                     icon="📊"
                     color="blue"
                 />
@@ -126,6 +128,7 @@ const DashboardHome = () => {
                     title="Total Earned"
                     value={`$${stats.totalEarned.toLocaleString()}`}
                     change="+15%"
+                    changeLabel="all time"
                     icon="💎"
                     color="purple"
                 />
@@ -133,6 +136,7 @@ const DashboardHome = () => {
                     title="Current APY"
                     value={`${stats.apy}%`}
                     change="+0.5%"
+                    changeLabel="market rate"
                     icon="📈"
                     color="orange"
                 />
@@ -142,12 +146,22 @@ const DashboardHome = () => {
             <div className="quick-actions">
                 <button
                     className="action-card action-primary"
+                    onClick={() => navigate('/lender/marketplace')}
+                >
+                    <span className="action-icon">🛒</span>
+                    <div>
+                        <h3>Marketplace</h3>
+                        <p>Browse & Offer Loans</p>
+                    </div>
+                </button>
+                <button
+                    className="action-card"
                     onClick={() => navigate('/lender/lend')}
                 >
                     <span className="action-icon">➕</span>
                     <div>
                         <h3>Lend Funds</h3>
-                        <p>Add liquidity to the pool</p>
+                        <p>Add liquidity to pool</p>
                     </div>
                 </button>
                 <button
@@ -250,16 +264,19 @@ const DashboardHome = () => {
     );
 };
 
-const StatCard = ({ title, value, change, icon, color }) => (
-    <div className={`stat-card stat-${color}`}>
+const StatCard = ({ title, value, change, changeLabel, icon, color }) => (
+    <div className={`stat-card stat-${color} glass-card hover-lift`}>
         <div className="stat-header">
-            <span className="stat-icon">{icon}</span>
+            <span className="stat-icon-wrapper">{icon}</span>
             <span className={`stat-change ${change.startsWith('+') ? 'positive' : 'negative'}`}>
-                {change}
+                {change} <span className="trend-label">{changeLabel}</span>
             </span>
         </div>
-        <h3 className="stat-title">{title}</h3>
-        <p className="stat-value">{value}</p>
+        <div className="stat-content">
+            <h3 className="stat-title">{title}</h3>
+            <p className="stat-value animated-number">{value}</p>
+        </div>
+        <div className="card-shine"></div>
     </div>
 );
 
