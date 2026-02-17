@@ -9,6 +9,9 @@ yarn.lock
 .env.development
 .env.production
 
+# API Keys (sensitive)
+**/apiKeys.js
+
 # Build outputs
 dist/
 build/
