@@ -4,7 +4,8 @@
 
 A production-ready DeFi lending platform that enables direct borrower-lender matching with smart contract automation. Built with modern web3 architecture and enterprise-grade cloud infrastructure.
 
----
+<img width="1919" height="935" alt="Image" src="https://github.com/user-attachments/assets/dc1153f7-3ec3-4f4e-afad-c6e342cfcf38" />
+<img width="1919" height="936" alt="Image" src="https://github.com/user-attachments/assets/4cc66063-2698-4126-9ee3-c9db144d4d40" />
 
 ## Why This Matters
 
